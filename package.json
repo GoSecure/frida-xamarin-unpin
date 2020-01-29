@@ -1,0 +1,17 @@
+{
+  "name": "xamarin-unpin",
+  "version": "1.0.0",
+  "description": "A Frida script to bypass Mono certificate pinning implementations.",
+  "main": "src/main.js",
+  "scripts": {
+    "build": "frida-compile src/main.js -o dist/xamarin-unpin.js"
+  },
+  "author": [
+    "Alexandre Beaulieu <abeaulieu@gosecure.net>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "frida-compile": "^9.1.0",
+    "frida-mono-api": "file:mono-api"
+  }
+}

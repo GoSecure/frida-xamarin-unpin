@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using XamarinMulti.Models;
+using SampleApp.Models;
 
-namespace XamarinMulti.Services
+namespace SampleApp.Services
 {
     public class MockDataStore : IDataStore<Item>
     {

@@ -1,8 +1,8 @@
 ﻿using System;
 
-using XamarinMulti.Models;
+using SampleApp.Models;
 
-namespace XamarinMulti.ViewModels
+namespace SampleApp.ViewModels
 {
     public class ItemDetailViewModel : BaseViewModel
     {

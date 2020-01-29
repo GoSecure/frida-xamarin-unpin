@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace XamarinMulti.Models
+namespace SampleApp.Models
 {
     public enum MenuItemType
     {

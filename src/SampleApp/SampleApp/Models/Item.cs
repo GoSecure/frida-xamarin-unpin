@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace XamarinMulti.Models
+namespace SampleApp.Models
 {
     public class Item
     {

@@ -4,7 +4,7 @@
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             x:Class="XamarinMulti.Views.ItemDetailPage"
+             x:Class="SampleApp.Views.ItemDetailPage"
              Title="{Binding Title}">
 
     <StackLayout Spacing="20" Padding="15">

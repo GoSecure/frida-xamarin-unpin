@@ -6,7 +6,7 @@ using System.Text;
 using Foundation;
 using UIKit;
 
-namespace XamarinMulti.iOS
+namespace SampleApp.iOS
 {
     class AppleLogger : ILogger
     {

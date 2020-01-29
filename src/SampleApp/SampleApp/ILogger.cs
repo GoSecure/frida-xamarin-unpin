@@ -1,4 +1,4 @@
-﻿namespace XamarinMulti
+﻿namespace SampleApp
 {
     public interface ILogger
     {

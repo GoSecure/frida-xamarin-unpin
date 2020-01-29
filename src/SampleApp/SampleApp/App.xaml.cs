@@ -1,14 +1,9 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Net.Http;
 using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
-using XamarinMulti.Services;
-using XamarinMulti.Views;
+using SampleApp.Services;
+using SampleApp.Views;
 
-namespace XamarinMulti
+namespace SampleApp
 {
     public partial class App : Application
     {

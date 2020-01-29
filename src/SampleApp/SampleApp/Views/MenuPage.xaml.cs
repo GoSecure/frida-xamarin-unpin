@@ -1,11 +1,11 @@
-﻿using XamarinMulti.Models;
+﻿using SampleApp.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
-namespace XamarinMulti.Views
+namespace SampleApp.Views
 {
     // Learn more about making custom code visible in the Xamarin.Forms previewer
     // by visiting https://aka.ms/xamarinforms-previewer

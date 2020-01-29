@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 using Xamarin.Forms;
 
-using XamarinMulti.Models;
-using XamarinMulti.Views;
+using SampleApp.Models;
+using SampleApp.Views;
 
-namespace XamarinMulti.ViewModels
+namespace SampleApp.ViewModels
 {
     public class ItemsViewModel : BaseViewModel
     {

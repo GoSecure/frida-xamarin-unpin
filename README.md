@@ -17,13 +17,42 @@ application has launched.
 
 ## Technical Details
 
-TODO
+On recent versions of the Mono runtime, the script works by creating a
+default `HttpClientHandler` and hooking the `HttpClient` base class'
+`SendAsync` method, which is the underlying method for all HTTP
+requests. When the method is called, the `HttpClientHandler` is
+checked and if it isn't the script-created handler, it replaces it by
+the default handler before proceeding with the `SendAsync` logic.
+
+Using this method, it is possible to hook any HTTP request as long as
+it is performed with the Xamarin System.Net.Http stack. Furthermore,
+it can be performed at any point during the program's lifecycle
+and does not require heap scanning.
+
+On older versions of the Mono runtime, it is even simpler because the
+certificate validation callback is a static property of the class
+`System.Net.ServicePointManager`. This property's `get` and `set`
+methods are hooked to always return null and always set null,
+respectively. Additionally, the setter is called with `null`
+explicitly by the script to remove any handler that may already be
+present.
+
+In both cases, the hooking process works by first forcing a JIT of the
+target method by the mono runtime using `mono_compile_method()`
+followed by a hooking of the native method code.
+
+The script has not yet been tested with tiered compilation, AOT
+compilation or full AOT compilation for iOS. We are interested in any
+feedback or sample applications to help us implement and debug these
+particular scenarios.
 
 ## Limitations
 
 - Currently it is impossible to early-instrument an application (using
   `frida -f`) because `frida-mono-api` needs the mono modules to
   already be loaded in memory.
+- Full AOT with iOS is not supported yet
+- Untested with Android AOT and Tiered compilation
 
 # Developing 
 
@@ -64,7 +93,7 @@ and hit the "Make HTTP Request" Button with/without the script.
 
 If you run into issues while trying to bypass pinning in real
 applications, feel free to open an issue with the Frida output and as
-many details as possible regarding the application you tried to
+much detail as possible regarding the application you tried to
 instrument.
 
 Pull requests, improvements, bug fixes and additional features are

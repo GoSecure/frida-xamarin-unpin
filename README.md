@@ -17,7 +17,7 @@ application has launched.
 
 ## Technical Details
 
-On recent versions of the Mono runtime, the script works by creating a
+On recent versions (>= 10.x) of the Mono runtime, the script works by creating a
 default `HttpClientHandler` and hooking the `HttpClient` base class'
 `SendAsync` method, which is the underlying method for all HTTP
 requests. When the method is called, the `HttpClientHandler` is
@@ -29,7 +29,7 @@ it is performed with the Xamarin System.Net.Http stack. Furthermore,
 it can be performed at any point during the program's lifecycle
 and does not require heap scanning.
 
-On older versions of the Mono runtime, it is even simpler because the
+On older versions (< 10.x) of the Mono runtime, it is even simpler because the
 certificate validation callback is a static property of the class
 `System.Net.ServicePointManager`. This property's `get` and `set`
 methods are hooked to always return null and always set null,

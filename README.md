@@ -45,7 +45,7 @@ If you want to build the APK or Frida script to play around, follow the instruct
 
 - Clone the modified `frida-mono-api` in this repository's root. 
 ```
-git clone https://github.com/alxbl/frida-mono-api mono-api
+git clone https://github.com/GoSecure/frida-mono-api mono-api
 cd mono-api && git switch extra
 ```
 - Run `npm i && npm run build`
@@ -56,7 +56,6 @@ cd mono-api && git switch extra
 frida-push
 frida -U com.test.sample -l dist/xamarin-unpin.js --no-pause
 ```
-
 
 To test the behavior, navigate in the application to the About page
 and hit the "Make HTTP Request" Button with/without the script.

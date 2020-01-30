@@ -1,7 +1,7 @@
 /* Xamarin/Android HttpClient generic certificate pinning bypass.
  *
- * @author   Alexandre "alxbl" Beaulieu <abeaulieu@gosecure.net>
- * @release  Jan 28th 2020
+ * @author     Alexandre "alxbl" Beaulieu <abeaulieu@gosecure.net>
+ * @release    Jan 28th 2020
  *
  * @description
  *
@@ -18,7 +18,7 @@
  * In the .NET Framework case, the System.Net.ServicePointerManager's is hooked
  * to always return NULL and forcefully set to NULL in order to reset it.
  *
- * @note  Validation still happens so the certificate must be valid.
+ * @note    Validation still happens so the certificate must be valid.
  */
 
 import { MonoApiHelper, MonoApi } from 'frida-mono-api'
@@ -41,18 +41,18 @@ if (kHandler) {
     let kInvoker = MonoApi.mono_class_from_name(img, Memory.allocUtf8String('System.Net.Http'), Memory.allocUtf8String('HttpMessageInvoker'));
 
     MonoApiHelper.Intercept(kInvoker, 'SendAsync', {
-	onEnter: (args) => {
-	    console.log(`[*] HttpClientHandler.SendAsync called`);
+        onEnter: (args) => {
+            console.log(`[*] HttpClientHandler.SendAsync called`);
 
-	    let self = args[0];
-	    let handler = MonoApiHelper.ClassGetFieldFromName(kInvoker, '_handler');
-	    let cur = MonoApiHelper.FieldGetValueObject(handler, self);
+            let self = args[0];
+            let handler = MonoApiHelper.ClassGetFieldFromName(kInvoker, '_handler');
+            let cur = MonoApiHelper.FieldGetValueObject(handler, self);
 
-	    if (cur.equals(pClientHandler)) return; // Already bypassed.
+            if (cur.equals(pClientHandler)) return; // Already bypassed.
 
-	    MonoApi.mono_field_set_value(self, handler, pClientHandler);
-	    console.log(`[+]   Replaced with default handler @ ${pClientHandler}`);
-	}
+            MonoApi.mono_field_set_value(self, handler, pClientHandler);
+            console.log(`[+]   Replaced with default handler @ ${pClientHandler}`);
+        }
     });
     console.log('[+] Hooked HttpMessageInvoker.SendAsync with DefaultHttpClientHandler technique');
     hooked = true;
@@ -73,21 +73,23 @@ let getter = MonoApi.mono_property_get_set_method(validationcallback)
 if (setter && getter) {
     MonoApiHelper.RuntimeInvoke(setter, NULL, NULL); // TODO: pArgs?
     console.log('[+] Set ServerCertificateValidationCallback to NULL');
+
+    // Hook get and set to always return / set NULL.
     // TODO: Expose overload in frida-mono-api ?
     pSet = MonoApi.mono_compile_method(setter)
     pGet = MonoApi.mono_compile_method(getter)
-    // Hook get and set to always return / set NULL.
     Interceptor.attach(pSet, {
-	onEnter: (args) => {
-	    args[1] = NULL;
-	}
+        onEnter: (args) => {
+            args[1] = NULL;
+        }
     });
 
     Interceptor.attach(pGet, {
-	onLeave: (ret) => {
-	    ret = NULL; // TODO: 0?
-	}
+        onLeave: (ret) => {
+            ret = NULL; // TODO: 0?
+        }
     });
+
     console.log('[+] Hooked ServerCertificateValidationCallback with get/set technique')
     hooked = true;
 } else {

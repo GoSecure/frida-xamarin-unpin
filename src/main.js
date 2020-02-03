@@ -26,11 +26,12 @@ const mono = MonoApi.module
 
 // Locate System.Net.Http.dll
 let status = Memory.alloc(0x1000);
-let http = MonoApi.mono_assembly_load_with_partial_name(Memory.allocUtf8String('System.Net.Http'), status);
-let img = MonoApi.mono_assembly_get_image(http);
 let hooked = false;
 
 // Mono 6.0+: Construct a default HttpClientHandler to inject in HttpMessageInvoker instances.
+let http = MonoApi.mono_assembly_load_with_partial_name(Memory.allocUtf8String('System.Net.Http'), status);
+let img = MonoApi.mono_assembly_get_image(http);
+
 let kHandler = MonoApi.mono_class_from_name(img, Memory.allocUtf8String('System.Net.Http'), Memory.allocUtf8String('HttpClientHandler'));
 if (kHandler) {
     let ctor = MonoApiHelper.ClassGetMethodFromName(kHandler, 'CreateDefaultHandler');
@@ -61,39 +62,52 @@ if (kHandler) {
 }
 
 
-// Mono < 6.0: Hook the ServicePointManager. It should be harmless to do that in newer versions
+// Mono < 6.0: Hook the ServicePointManager.
 //             since the API is still there but unused.
-// [TODO] This is currently untested.
-let kServicePointManager = MonoApiHelper.ClassFromName(img, 'System.Net.ServicePointManager');
-var validationCallback = MonoApi.mono_class_get_property_from_name(c, Memory.allocUtf8String('ServerCertificateValidationCallback'))
-console.log(`[*] ServerCertificateValidationCallback @ ${validationCallback}`)
-let setter = MonoApi.mono_property_get_set_method(validationCallback)
-let getter = MonoApi.mono_property_get_set_method(validationcallback)
+// [TODO] This is currently untested. If you have an APK that uses an
+//        older mono version and are getting errors, see the TODO
+//        tags.
+let net = MonoApi.mono_assembly_load_with_partial_name(Memory.allocUtf8String('System'), status);
+let imgNet = MonoApi.mono_assembly_get_image(net);
+let kSvc = MonoApiHelper.ClassFromName(imgNet, 'System.Net.ServicePointManager');
+let kCb = MonoApiHelper.ClassFromName(imgNet, 'System.Net.Security.RemoteCertificateValidationCallback')
 
-if (setter && getter) {
-    MonoApiHelper.RuntimeInvoke(setter, NULL, NULL); // TODO: pArgs?
-    console.log('[+] Set ServerCertificateValidationCallback to NULL');
+let validationCallback = MonoApi.mono_class_get_property_from_name(kSvc, Memory.allocUtf8String('ServerCertificateValidationCallback'))
+if (!hooked && !validationCallback.isNull()) {
+    console.log(`[*] ServerCertificateValidationCallback @ ${validationCallback}`)
 
-    // Hook get and set to always return / set NULL.
-    // TODO: Expose overload in frida-mono-api ?
-    pSet = MonoApi.mono_compile_method(setter)
-    pGet = MonoApi.mono_compile_method(getter)
-    Interceptor.attach(pSet, {
-        onEnter: (args) => {
-            args[1] = NULL;
-        }
-    });
+    let setter = MonoApi.mono_property_get_set_method(validationCallback)
+    let getter = MonoApi.mono_property_get_set_method(validationCallback)
 
-    Interceptor.attach(pGet, {
-        onLeave: (ret) => {
-            ret = NULL; // TODO: 0?
-        }
-    });
+    if (setter && getter) {
+        MonoApiHelper.RuntimeInvoke(setter, /*instance=*/NULL, /*pArgs=*/NULL); // TODO: pArgs?
+        console.log('[+] Set ServerCertificateValidationCallback to NULL');
 
-    console.log('[+] Hooked ServerCertificateValidationCallback with get/set technique')
-    hooked = true;
+        // Hook get and set to always return / set NULL.
+        // TODO: Expose overload in frida-mono-api ?
+        pSet = MonoApi.mono_compile_method(setter)
+        pGet = MonoApi.mono_compile_method(getter)
+        Interceptor.attach(pSet, {
+            onEnter: (args) => {
+                // TODO: Need valid args[] with a NULL entry?
+                args[1] = NULL;
+            }
+        });
+
+        Interceptor.attach(pGet, {
+            onLeave: (ret) => {
+                // TODO: Need valid args[] with a NULL entry? Or mono_box_value?
+                ret = NULL; 
+            }
+        });
+
+        console.log('[+] Hooked ServerCertificateValidationCallback with get/set technique')
+        hooked = true;
+    } else {
+        console.log('[-] Getter/Setter not found for ServerCertificateValidationCallback')
+    }
 } else {
-    console.log('[-] Getter/Setter not found for ServerCertificateValidationCallback')
+    console.log('[-] ServicePointManager validation callback not found.');
 }
 
 if (hooked) console.log('[+] Done!\nMake sure you have a valid MITM CA installed on the device and have fun.');

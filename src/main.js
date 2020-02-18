@@ -24,6 +24,7 @@
 import { MonoApiHelper, MonoApi } from 'frida-mono-api'
 const mono = MonoApi.module
 
+
 // Locate System.Net.Http.dll
 let status = Memory.alloc(0x1000);
 let hooked = false;
@@ -31,12 +32,12 @@ let hooked = false;
 // Mono 6.0+: Construct a default HttpClientHandler to inject in HttpMessageInvoker instances.
 let http = MonoApi.mono_assembly_load_with_partial_name(Memory.allocUtf8String('System.Net.Http'), status);
 let img = MonoApi.mono_assembly_get_image(http);
-
 let kHandler = MonoApi.mono_class_from_name(img, Memory.allocUtf8String('System.Net.Http'), Memory.allocUtf8String('HttpClientHandler'));
+let ctor = MonoApiHelper.ClassGetMethodFromName(kHandler, 'CreateDefaultHandler');
+
+let INJECTED = {} // Keep track of injected handlers.
+
 if (kHandler) {
-    let ctor = MonoApiHelper.ClassGetMethodFromName(kHandler, 'CreateDefaultHandler');
-    let pClientHandler = MonoApiHelper.RuntimeInvoke(ctor, NULL); // Static method -> instance = NULL.
-    console.log(`[+] Created Default HttpClientHandler @ ${pClientHandler}`);
 
     // Hook HttpMessageInvoker.SendAsync
     let kInvoker = MonoApi.mono_class_from_name(img, Memory.allocUtf8String('System.Net.Http'), Memory.allocUtf8String('HttpMessageInvoker'));
@@ -48,11 +49,15 @@ if (kHandler) {
             let self = args[0];
             let handler = MonoApiHelper.ClassGetFieldFromName(kInvoker, '_handler');
             let cur = MonoApiHelper.FieldGetValueObject(handler, self);
+            if (INJECTED[cur]) return; // Already bypassed.
 
-            if (cur.equals(pClientHandler)) return; // Already bypassed.
+            // Create a new handler per HttpClient to avoid dispose() causing a crash.
+            let pClientHandler = MonoApiHelper.RuntimeInvoke(ctor, NULL); // instance is NULL for static methods.
+            console.log(`[+] New HttpClientHandler VA=${pClientHandler}`);
 
             MonoApi.mono_field_set_value(self, handler, pClientHandler);
-            console.log(`[+]   Replaced with default handler @ ${pClientHandler}`);
+            console.log(`[+] Injected default handler for Client=${self}`);
+            INJECTED[pClientHandler] = true; // TODO: cleanup on HttpClient dispose.
         }
     });
     console.log('[+] Hooked HttpMessageInvoker.SendAsync with DefaultHttpClientHandler technique');
@@ -60,7 +65,6 @@ if (kHandler) {
 } else {
     console.log('[-] HttpClientHandler not found (Mono < 6.0?)');
 }
-
 
 // Mono < 6.0: Hook the ServicePointManager.
 //             since the API is still there but unused.

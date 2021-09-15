@@ -76,6 +76,7 @@ If you want to build the APK or Frida script to play around, follow the instruct
 ```
 git clone https://github.com/GoSecure/frida-mono-api mono-api
 cd mono-api && git switch extra
+cd ..
 ```
 - Run `npm i && npm run build`
 - Ensure you have frida installed (`pip install frida frida-push`)
